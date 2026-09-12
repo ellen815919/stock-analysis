@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>股票自動化分析資料庫</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f4f6f9; }
+    .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+    .btn-danger { background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+    .btn-add { background: #2ecc71; color: white; border: none; padding: 8px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>📈 股票每日分析主頁</h1>
+  <button class="btn-add" onclick="addStock()">+ 新增分析股票</button>
+  <hr>
+  <div id="stock-list"></div>
+
+  <script>
+    // 刪除股票防呆二次確認
+    function deleteStock(symbol, name) {
+      const confirmFirst = confirm(`⚠️ 確定要刪除 [${name} (${symbol})] 嗎？`);
+      if (confirmFirst) {
+        const confirmSecond = confirm(`‼️ 再次確認：刪除後將無法恢復過去 6 個月的分析資料，確定刪除？`);
+        if (confirmSecond) {
+          alert(`已成功刪除 ${name}`);
+          // 呼叫 API 或更新資料庫狀態
+        }
+      }
+    }
+    function addStock() {
+      const symbol = prompt("請輸入要新增的股票代號（例如：2330）：");
+      if (symbol) alert(`已將 ${symbol} 加入每日自動分析清單！`);
+    }
+  </script>
+</body>
+</html>
