@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>股票每日自動分析資料庫</title>
-  <!-- 引入 TradingView 圖表庫 -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #f4f6f9; color: #333; margin: 0; }
@@ -23,7 +22,7 @@
     th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
     th { background: #f8f9fa; }
     .hidden { display: none; }
-    .chart-container { height: 350px; margin: 15px 0; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
+    .chart-container { height: 380px; margin: 15px 0; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
   </style>
 </head>
 <body>
@@ -87,20 +86,20 @@
         `;
         container.appendChild(card);
         
-        // 載入 TradingView 走勢圖 (加入布林通道參數)
+        // 載入 TradingView 走勢圖 (同時包含 K線 與 布林通道)
         new TradingView.widget({
           "autosize": true,
           "symbol": "TWSE:" + stock.symbol,
           "interval": "D",
           "timezone": "Asia/Taipei",
           "theme": "light",
-          "style": "1",
+          "style": "1", // 1 代表顯示蠟燭圖 (K線)
           "locale": "zh_TW",
           "enable_publishing": false,
           "hide_top_toolbar": true,
           "save_image": false,
           "studies": [
-            "BB@tv-basicstudies" // 這裡新增了布林通道指標
+            "BB@tv-basicstudies" // 疊加布林通道指標
           ],
           "container_id": "chart-" + stock.symbol
         });
