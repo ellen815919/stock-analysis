@@ -63,7 +63,6 @@
         card.className = 'stock-card';
         const history = dbData.history[stock.symbol] || [];
         
-        // 卡片結構：標題 + 走勢圖 + 數據分頁
         card.innerHTML = `
           <div class="stock-title">
             <h2>${stock.name} (${stock.symbol})</h2>
@@ -88,10 +87,10 @@
         `;
         container.appendChild(card);
         
-        // 載入 TradingView 走勢圖
+        // 載入 TradingView 走勢圖 (加入布林通道參數)
         new TradingView.widget({
           "autosize": true,
-          "symbol": "TWSE:" + stock.symbol, // 預設使用台灣證交所代號
+          "symbol": "TWSE:" + stock.symbol,
           "interval": "D",
           "timezone": "Asia/Taipei",
           "theme": "light",
@@ -100,6 +99,9 @@
           "enable_publishing": false,
           "hide_top_toolbar": true,
           "save_image": false,
+          "studies": [
+            "BB@tv-basicstudies" // 這裡新增了布林通道指標
+          ],
           "container_id": "chart-" + stock.symbol
         });
 
@@ -165,8 +167,8 @@
       if (!dbData.stocks.some(s => s.symbol === symbol)) {
         dbData.stocks.push({ symbol, name });
         dbData.history[symbol] = [];
-        render(); // 重新渲染，會立刻載入該股票的走勢圖
-        alert(`已成功新增 ${name} (${symbol})！\n半年走勢圖已載入。每日盤後會自動開始記錄分析數據。\n（註：若要永久儲存，請至 GitHub 的 stocks_db.json 中同步加入清單）`);
+        render(); 
+        alert(`已成功新增 ${name} (${symbol})！`);
       }
     }
 
