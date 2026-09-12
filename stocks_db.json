@@ -8,42 +8,6 @@
   "history": {
     "3481": [
       {
-        "date": "2026-04-15",
-        "ma_status": "測試：半年(150天前)歷史數據",
-        "bollinger": "下軌附近",
-        "volume_change": "-500 張",
-        "kd_status": "低檔鈍化",
-        "rsi_status": "RSI(6): 25",
-        "action": "分批建倉"
-      },
-      {
-        "date": "2026-07-10",
-        "ma_status": "測試：三個月(60天前)歷史數據",
-        "bollinger": "中軌與上軌之間",
-        "volume_change": "+5,200 張",
-        "kd_status": "黃金交叉",
-        "rsi_status": "RSI(6): 55",
-        "action": "續抱"
-      },
-      {
-        "date": "2026-08-20",
-        "ma_status": "測試：當月(20天前)歷史數據",
-        "bollinger": "上軌附近",
-        "volume_change": "+8,000 張",
-        "kd_status": "高檔鈍化",
-        "rsi_status": "RSI(6): 75",
-        "action": "分批減碼"
-      },
-      {
-        "date": "2026-09-01",
-        "ma_status": "測試：半月(10天前)歷史數據",
-        "bollinger": "中軌之下",
-        "volume_change": "+1,000 張",
-        "kd_status": "低檔交叉",
-        "rsi_status": "RSI(6): 35",
-        "action": "觀望"
-      },
-      {
         "date": "2026-09-11",
         "ma_status": "5日線 -2.15%, 10日線 -1.05%, 30日線 +1.85%",
         "bollinger": "開口收斂，位於中軌與下軌之間",
