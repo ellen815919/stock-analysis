@@ -14,8 +14,8 @@
     .btn-primary { background: #3498db; color: white; }
     .stock-card { border: 1px solid #e1e8ed; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
     .stock-title { display: flex; justify-content: space-between; align-items: center; }
-    .tabs { display: flex; gap: 8px; margin: 15px 0; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
-    .tab-btn { background: #f1f3f5; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    .tabs { display: flex; gap: 8px; margin: 15px 0; border-bottom: 1px solid #ddd; padding-bottom: 8px; overflow-x: auto; }
+    .tab-btn { background: #f1f3f5; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
     .tab-btn.active { background: #3498db; color: white; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
@@ -36,18 +36,17 @@
   <script>
     let dbData = { stocks: [], history: {} };
 
-    // 載入資料庫
     async function loadData() {
       try {
         const res = await fetch('stocks_db.json?t=' + new Date().getTime());
+        if(!res.ok) throw new Error();
         dbData = await res.json();
         render();
       } catch (e) {
-        document.getElementById('stock-container').innerHTML = '<p>尚無分析資料，請等待系統自動執行盤後分析。</p>';
+        document.getElementById('stock-container').innerHTML = '<p>尚無分析資料，請確定已建立 stocks_db.json 檔案。</p>';
       }
     }
 
-    // 渲染主頁與個股資料庫
     function render() {
       const container = document.getElementById('stock-container');
       container.innerHTML = '';
@@ -60,7 +59,6 @@
       dbData.stocks.forEach(stock => {
         const card = document.createElement('div');
         card.className = 'stock-card';
-        
         const history = dbData.history[stock.symbol] || [];
         
         card.innerHTML = `
@@ -88,18 +86,14 @@
       });
     }
 
-    // 切換頁籤顯示
     function filterData(symbol, days, btn) {
       const parent = btn.parentElement;
       parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
       const history = dbData.history[symbol] || [];
-      const filtered = history.slice(-days);
-      renderTable(symbol, filtered);
+      renderTable(symbol, history.slice(-days));
     }
 
-    // 渲染數據表格
     function renderTable(symbol, list) {
       const target = document.getElementById(`table-${symbol}`);
       if (!list || list.length === 0) {
@@ -137,28 +131,34 @@
       `;
     }
 
-    // 開啟/收合個股資料庫
     function toggleDB(symbol) {
       const el = document.getElementById(`db-${symbol}`);
       el.classList.toggle('hidden');
     }
 
-    // 新增股票
     function addStock() {
-      const symbol = prompt("請輸入股票代號（例如：2330）：");
-      if (symbol) {
-        const name = prompt("請輸入股票名稱（例如：台積電）：") || symbol;
-        alert(`已送出新增 requests！系統將於盤後分析 ${name} (${symbol})。`);
+      const symbol = prompt("請輸入要新增的股票代號（例如：2330）：");
+      if (!symbol) return;
+      const name = prompt("請輸入股票名稱（例如：台積電）：") || symbol;
+      
+      // 畫面即時加入顯示
+      if (!dbData.stocks.some(s => s.symbol === symbol)) {
+        dbData.stocks.push({ symbol, name });
+        dbData.history[symbol] = [];
+        render();
+        alert(`已成功在畫面上新增 ${name} (${symbol})！\n註：若要永久儲存至伺服器資料庫，請在 GitHub 的 stocks_db.json 中同步新增。`);
       }
     }
 
-    // 刪除股票（雙重二次確認防呆機制）
     function deleteStock(symbol, name) {
       const firstCheck = confirm(`⚠️ 確定要刪除 [${name} (${symbol})] 嗎？`);
       if (firstCheck) {
         const secondCheck = confirm(`‼️ 再次確認：刪除後將徹底清空 [${name}] 過去 6 個月的所有資料，確定刪除？`);
         if (secondCheck) {
-          alert(`已成功將 ${name} 從分析清單中移除。`);
+          dbData.stocks = dbData.stocks.filter(s => s.symbol !== symbol);
+          delete dbData.history[symbol];
+          render();
+          alert(`已成功將 ${name} 從畫面清單中移除。`);
         }
       }
     }
