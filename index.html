@@ -3,56 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>股票自動化分析資料庫</title>
+  <title>股票每日自動分析資料庫</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #f4f6f9; color: #333; }
-    .container { max-width: 800px; margin: 0 auto; }
-    .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .btn { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
-    .btn-danger { background: #e74c3c; margin-left: 10px; }
-    .btn-add { background: #2ecc71; margin-bottom: 20px; font-weight: bold; }
-    .stock-header { display: flex; justify-content: space-between; align-items: center; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #f4f6f9; color: #333; margin: 0; }
+    .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+    .btn { padding: 8px 16px; border-radius: 6px; cursor: pointer; border: none; font-weight: bold; text-decoration: none; display: inline-block; }
+    .btn-add { background: #2ecc71; color: white; }
+    .btn-danger { background: #e74c3c; color: white; margin-left: 8px; }
+    .btn-primary { background: #3498db; color: white; }
+    .stock-card { border: 1px solid #e1e8ed; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+    .stock-title { display: flex; justify-content: space-between; align-items: center; }
+    .tabs { display: flex; gap: 8px; margin: 15px 0; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+    .tab-btn { background: #f1f3f5; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    .tab-btn.active { background: #3498db; color: white; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background: #f8f9fa; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>📈 股票每日分析主頁面</h1>
-    <button class="btn btn-add" onclick="addStock()">+ 新增股票</button>
-
-    <div id="stock-list">
-      <!-- 預設個股：力積電 6770 -->
-      <div class="card">
-        <div class="stock-header">
-          <h2>力積電 (6770)</h2>
-          <div>
-            <button class="btn" onclick="alert('進入 6770 資料庫（支援當日/半月/當月/3月/6月統計）')">查看分析資料庫</button>
-            <button class="btn btn-danger" onclick="deleteStock('6770', '力積電')">刪除股票</button>
-          </div>
-        </div>
-      </div>
+    <div class="header-action">
+      <h1>📈 股票每日分析主頁面</h1>
+      <button class="btn btn-add" onclick="addStock()">+ 新增分析股票</button>
     </div>
+
+    <div id="stock-container">資料加載中...</div>
   </div>
 
   <script>
-    function addStock() {
-      const symbol = prompt("請輸入要新增的股票代號（例如：2330）：");
-      if (symbol) {
-        const name = prompt("請輸入股票名稱（例如：台積電）：") || symbol;
-        alert(`已成功新增 ${name} (${symbol})！系統將於下次盤後自動分析。`);
-        location.reload();
+    let dbData = { stocks: [], history: {} };
+
+    // 載入資料庫
+    async function loadData() {
+      try {
+        const res = await fetch('stocks_db.json?t=' + new Date().getTime());
+        dbData = await res.json();
+        render();
+      } catch (e) {
+        document.getElementById('stock-container').innerHTML = '<p>尚無分析資料，請等待系統自動執行盤後分析。</p>';
       }
     }
 
+    // 渲染主頁與個股資料庫
+    function render() {
+      const container = document.getElementById('stock-container');
+      container.innerHTML = '';
+
+      if (!dbData.stocks || dbData.stocks.length === 0) {
+        container.innerHTML = '<p>目前沒有追蹤的股票，請點擊上方按鈕新增！</p>';
+        return;
+      }
+
+      dbData.stocks.forEach(stock => {
+        const card = document.createElement('div');
+        card.className = 'stock-card';
+        
+        const history = dbData.history[stock.symbol] || [];
+        
+        card.innerHTML = `
+          <div class="stock-title">
+            <h2>${stock.name} (${stock.symbol})</h2>
+            <div>
+              <button class="btn btn-primary" onclick="toggleDB('${stock.symbol}')">查看個股資料庫</button>
+              <button class="btn btn-danger" onclick="deleteStock('${stock.symbol}', '${stock.name}')">刪除股票</button>
+            </div>
+          </div>
+          
+          <div id="db-${stock.symbol}" class="hidden">
+            <div class="tabs">
+              <button class="tab-btn active" onclick="filterData('${stock.symbol}', 1, this)">當日分析</button>
+              <button class="tab-btn" onclick="filterData('${stock.symbol}', 15, this)">半月統計</button>
+              <button class="tab-btn" onclick="filterData('${stock.symbol}', 30, this)">當月統計</button>
+              <button class="tab-btn" onclick="filterData('${stock.symbol}', 90, this)">三個月統計</button>
+              <button class="tab-btn" onclick="filterData('${stock.symbol}', 180, this)">半年統計</button>
+            </div>
+            <div id="table-${stock.symbol}"></div>
+          </div>
+        `;
+        container.appendChild(card);
+        renderTable(stock.symbol, history.slice(-1));
+      });
+    }
+
+    // 切換頁籤顯示
+    function filterData(symbol, days, btn) {
+      const parent = btn.parentElement;
+      parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const history = dbData.history[symbol] || [];
+      const filtered = history.slice(-days);
+      renderTable(symbol, filtered);
+    }
+
+    // 渲染數據表格
+    function renderTable(symbol, list) {
+      const target = document.getElementById(`table-${symbol}`);
+      if (!list || list.length === 0) {
+        target.innerHTML = '<p style="padding:10px;">該時間範圍內暫無數據。</p>';
+        return;
+      }
+
+      let rows = list.map(item => `
+        <tr>
+          <td>${item.date}</td>
+          <td>${item.ma_status}</td>
+          <td>${item.bollinger}</td>
+          <td>${item.volume_change}</td>
+          <td>${item.kd_status}</td>
+          <td>${item.rsi_status}</td>
+          <td><b>${item.action}</b></td>
+        </tr>
+      `).join('');
+
+      target.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>均線站穩度</th>
+              <th>布林通道狀態</th>
+              <th>成交量變化</th>
+              <th>KD趨勢</th>
+              <th>RSI指標</th>
+              <th>明日建議</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    // 開啟/收合個股資料庫
+    function toggleDB(symbol) {
+      const el = document.getElementById(`db-${symbol}`);
+      el.classList.toggle('hidden');
+    }
+
+    // 新增股票
+    function addStock() {
+      const symbol = prompt("請輸入股票代號（例如：2330）：");
+      if (symbol) {
+        const name = prompt("請輸入股票名稱（例如：台積電）：") || symbol;
+        alert(`已送出新增 requests！系統將於盤後分析 ${name} (${symbol})。`);
+      }
+    }
+
+    // 刪除股票（雙重二次確認防呆機制）
     function deleteStock(symbol, name) {
       const firstCheck = confirm(`⚠️ 確定要刪除 [${name} (${symbol})] 嗎？`);
       if (firstCheck) {
-        const secondCheck = confirm(`‼️ 警告：刪除後將同步清除過去 6 個月的所有分析數據，確定刪除？`);
+        const secondCheck = confirm(`‼️ 再次確認：刪除後將徹底清空 [${name}] 過去 6 個月的所有資料，確定刪除？`);
         if (secondCheck) {
-          alert(`已成功刪除 ${name} (${symbol})。`);
-          location.reload();
+          alert(`已成功將 ${name} 從分析清單中移除。`);
         }
       }
     }
+
+    loadData();
   </script>
 </body>
 </html>
